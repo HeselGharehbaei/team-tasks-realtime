@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     # Django REST Framework
     'rest_framework',
     'rest_framework.authtoken',
+    'drf_spectacular',
 
 
     'teams',
@@ -80,6 +81,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'team_tasks_realtime.wsgi.application'
 
 REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],

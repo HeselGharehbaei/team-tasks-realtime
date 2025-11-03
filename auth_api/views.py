@@ -3,11 +3,41 @@ from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import authenticate
+from drf_spectacular.utils import extend_schema
+from .serializers import LoginSerializer, TokenSerializer
+from drf_spectacular.utils import extend_schema, OpenApiExample
 
 
 class LoginView(APIView):
     authentication_classes= []
     permission_classes= []
+
+    @extend_schema(
+        request=LoginSerializer,
+        responses={200: TokenSerializer},
+        summary="ورود کاربر",
+        description="لاگین با نام کاربری و رمز عبور و دریافت توکن",
+        tags=['Auth'],
+        examples=[
+            OpenApiExample(
+                "نمونه لاگین",
+                value={
+                    "username": "ali",
+                    "password": "12345678"
+                },
+                request_only=True,
+                response_only=False
+            ),
+            OpenApiExample(
+                "نمونه توکن",
+                value={
+                    "token": "123456abcdef"
+                },
+                request_only=False,
+                response_only=True
+            )
+        ]
+    )
 
 
     def post(self, request):
