@@ -38,9 +38,16 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+
+    # Django REST Framework
+    'rest_framework',
+    'rest_framework.authtoken',
+
+
     'teams',
     'tasks',
     'notifications',
+    'accounts',
 ]
 
 MIDDLEWARE = [
@@ -72,7 +79,14 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'team_tasks_realtime.wsgi.application'
 
-
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ]
+}
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
