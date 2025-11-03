@@ -45,7 +45,42 @@ class TeamCreateView(APIView):
         return Response(TeamSerializer(team).data, status=status.HTTP_201_CREATED)
 
 
-class TeamListView(APIView):
+@extend_schema(
+    responses={200: TeamSerializer(many=True)},
+    summary="لیست تیم‌های کاربر",
+    description=(
+        "تمام تیم‌هایی که کاربر فعلی عضو آن‌هاست نمایش داده می‌شوند.\n"
+        "هر تیم شامل شناسه (ID)، نام تیم، و اطلاعات اعضا است."
+    ),
+    tags=['Teams'],
+    examples=[
+        OpenApiExample(
+            "نمونه پاسخ لیست تیم‌ها",
+            value=[
+                {
+                    "id": 1,
+                    "name": "تیم طراحی",
+                    "members_info": [
+                        {"id": 1, "username": "arash"},
+                        {"id": 2, "username": "sara"}
+                    ]
+                },
+                {
+                    "id": 2,
+                    "name": "تیم بک‌اند",
+                    "members_info": [
+                        {"id": 1, "username": "arash"},
+                        {"id": 3, "username": "reza"}
+                    ]
+                }
+            ],
+            response_only=True
+        )
+    ]
+)
+
+
+class TeamListView(APIView):  
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
