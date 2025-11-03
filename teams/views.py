@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status, permissions
 from drf_spectacular.utils import extend_schema, OpenApiExample
 from .serializers import TeamSerializer
+from .models import Team
 
 
 class TeamCreateView(APIView):
@@ -42,3 +43,13 @@ class TeamCreateView(APIView):
         serializer.is_valid(raise_exception=True)
         team = serializer.save()
         return Response(TeamSerializer(team).data, status=status.HTTP_201_CREATED)
+
+
+class TeamListView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        # فقط تیم‌هایی که کاربر عضو آن‌هاست
+        teams = Team.objects.filter(members=request.user)
+        serializer = TeamSerializer(teams, many=True)
+        return Response(serializer.data)
