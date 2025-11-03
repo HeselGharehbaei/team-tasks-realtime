@@ -8,7 +8,7 @@ class LoginSerializer(serializers.Serializer):
         examples = {
             "login_example": {
                 "username": "ali",
-                "password": "12345678"
+                "password": "123456"
             }
         }
 

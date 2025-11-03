@@ -23,7 +23,7 @@ class LoginView(APIView):
                 "نمونه لاگین",
                 value={
                     "username": "ali",
-                    "password": "12345678"
+                    "password": "123456"
                 },
                 request_only=True,
                 response_only=False
