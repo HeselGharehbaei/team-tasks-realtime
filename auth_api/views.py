@@ -31,7 +31,7 @@ class LoginView(APIView):
             OpenApiExample(
                 "نمونه توکن",
                 value={
-                    "token": "123456abcdef"
+                    "Authorization": "Token 123456abcdef"
                 },
                 request_only=False,
                 response_only=True
