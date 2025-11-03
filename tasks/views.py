@@ -154,3 +154,42 @@ class TaskDetailView(APIView):
         self.check_object_permissions(request, task)
         serializer = TaskSerializer(task)
         return Response(serializer.data)
+
+
+class TaskAssignView(APIView):
+    permission_classes = [permissions.IsAuthenticated, IsTeamMember]
+
+    def post(self, request, pk):
+        try:
+            task = Task.objects.get(pk=pk)
+        except Task.DoesNotExist:
+            return Response({"detail": "Task not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # بررسی اینکه درخواست‌دهنده عضو تیم است
+        self.check_object_permissions(request, task)
+
+        assignee_id = request.data.get("assignee_id")
+        if not assignee_id:
+            return Response({"detail": "assignee_id is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            assignee = User.objects.get(id=assignee_id)
+        except User.DoesNotExist:
+            return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # بررسی اینکه assignee عضو همان تیم است
+        if assignee not in task.team.members.all():
+            return Response({"detail": "User is not a member of this team."}, status=status.HTTP_403_FORBIDDEN)
+
+        # تخصیص وظیفه
+        task.assignee = assignee
+        task.save()
+
+        # TODO: ارسال نوتیفیکیشن بلادرنگ
+        message = f"وظیفه '{task.title}' به شما واگذار شد."
+
+        return Response({
+            "message": "Task assigned successfully.",
+            "assigned_to": {"id": assignee.id, "username": assignee.username},
+            "task": task.title
+        }, status=status.HTTP_200_OK)
