@@ -12,7 +12,7 @@ PRIORITY_CHOICES = [
 
 class Task(models.Model):
     title= models.CharField(max_length=250)
-    creator=models.ForeignKey(User, related_name='created_tasks', on_delete=models.CASCADE)
+    creator=models.ForeignKey(User, related_name='created_tasks', on_delete=models.CASCADE, blank= True, null=True)
     description= models.TextField(max_length=500)
     due_date= models.DateTimeField()
     priority= models.CharField(max_length=10, choices=PRIORITY_CHOICES)
