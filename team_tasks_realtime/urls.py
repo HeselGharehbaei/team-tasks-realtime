@@ -21,7 +21,8 @@ from drf_spectacular.views import SpectacularRedocView, SpectacularAPIView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('auth_api.urls')),
-    
+    path('api/teams/', include('teams.urls')),
+
     # OpenAPI schema (JSON)
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
 
