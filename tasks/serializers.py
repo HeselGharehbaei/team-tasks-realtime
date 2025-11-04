@@ -28,3 +28,15 @@ class TaskAssignResponseSerializer(serializers.Serializer):
     message = serializers.CharField()
     assigned_to = serializers.DictField()
     task = serializers.CharField()
+
+
+class TaskMentionRequestSerializer(serializers.Serializer):
+    description = serializers.CharField(help_text="توضیح وظیفه شامل @username برای تگ کردن کاربران")
+
+
+class TaskMentionResponseSerializer(serializers.Serializer):
+    message = serializers.CharField()
+    tagged_users = serializers.ListField(
+        child=serializers.DictField(),
+        help_text="کاربرانی که در توضیحات تگ شدند"
+    )

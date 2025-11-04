@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
-from .serializers import TaskSerializer, TaskAssignResponseSerializer
+from .serializers import TaskSerializer, TaskAssignResponseSerializer, TaskMentionRequestSerializer, TaskMentionResponseSerializer
 from .models import Task
 from django.contrib.auth.models import User
 import re
@@ -213,3 +213,71 @@ class TaskAssignView(APIView):
             "assigned_to": {"id": assignee.id, "username": assignee.username},
             "task": task.title
         }, status=status.HTTP_200_OK)
+    
+
+class TaskMentionView(APIView):
+    permission_classes = [permissions.IsAuthenticated, IsTeamMember]
+
+    @extend_schema(
+        summary="تگ کردن کاربران در توضیحات وظیفه",
+        description="کاربران می‌توانند در توضیح وظیفه سایر اعضای تیم را با @username تگ کنند. برای هر کاربر تگ‌شده، نوتیفیکیشن بلادرنگ ارسال خواهد شد.",
+        tags=['Tasks'],
+        request=TaskMentionRequestSerializer,
+        responses={200: TaskMentionResponseSerializer},
+        examples=[
+            OpenApiExample(
+                "نمونه درخواست",
+                value={"description": "لطفاً بررسی کنید @ali @sara"},
+                request_only=True
+            ),
+            OpenApiExample(
+                "نمونه پاسخ موفق",
+                value={
+                    "message": "Users tagged successfully.",
+                    "tagged_users": [
+                        {"id": 2, "username": "ali"},
+                        {"id": 3, "username": "sara"}
+                    ]
+                },
+                response_only=True
+            )
+        ]
+    )
+    def post(self, request, pk):
+        try:
+            task = Task.objects.get(pk=pk)
+        except Task.DoesNotExist:
+            return Response({"detail": "Task not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        self.check_object_permissions(request, task)
+
+        serializer = TaskMentionRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        description = serializer.validated_data["description"]
+
+        # پیدا کردن همه‌ی @usernameها
+        mentioned_usernames = re.findall(r'@(\w+)', description)
+        if not mentioned_usernames:
+            return Response({"detail": "No usernames mentioned."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # پیدا کردن کاربران
+        users = User.objects.filter(username__in=mentioned_usernames)
+        team_members = task.team.members.all()
+
+        # فقط اعضای تیم مجازند
+        valid_users = [u for u in users if u in team_members]
+
+        # افزودن به tagged_users
+        task.tagged_users.add(*valid_users)
+        task.description = description
+        task.save()
+
+        # TODO: ارسال نوتیفیکیشن بلادرنگ
+        for user in valid_users:
+            print(f"📢 {request.user.username} شما را در '{task.title}' تگ کرد")
+
+        response_data = {
+            "message": "Users tagged successfully.",
+            "tagged_users": [{"id": u.id, "username": u.username} for u in valid_users]
+        }
+        return Response(response_data, status=status.HTTP_200_OK)
