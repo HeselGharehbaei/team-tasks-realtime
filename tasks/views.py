@@ -71,7 +71,16 @@ class TaskCreateView(APIView):
                 continue
         if tagged_users:
             task.tagged_users.add(*tagged_users)
-            # TODO: ارسال نوتیفیکیشن بلادرنگ
+        # TODO: ارسال نوتیفیکیشن بلادرنگ
+            for user in tagged_users:
+                message = f"{request.user.username} شما را در وظیفه '{task.title}' تگ کرد."
+                send_realtime_notification(
+                    user=user,
+                    type_='mention',
+                    title='تگ شدن در وظیفه',
+                    message=message,
+                    task=task
+                )
 
         return Response(TaskSerializer(task).data, status=status.HTTP_201_CREATED)
 
