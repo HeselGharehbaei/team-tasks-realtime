@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 import re
 from .permissions import IsTeamMember
 from drf_spectacular.utils import extend_schema, OpenApiExample
+from notifications.utils import send_realtime_notification
 
 
 class TaskCreateView(APIView):
@@ -207,6 +208,13 @@ class TaskAssignView(APIView):
 
         # TODO: ارسال نوتیفیکیشن بلادرنگ
         message = f"وظیفه '{task.title}' به شما واگذار شد."
+        send_realtime_notification(
+            user=assignee,
+            type_='assignment',
+            title='تخصیص وظیفه جدید',
+            message=message,
+            task=task
+        )
 
         return Response({
             "message": "Task assigned successfully.",
@@ -274,7 +282,14 @@ class TaskMentionView(APIView):
 
         # TODO: ارسال نوتیفیکیشن بلادرنگ
         for user in valid_users:
-            print(f"📢 {request.user.username} شما را در '{task.title}' تگ کرد")
+            message = f"{request.user.username} شما را در وظیفه '{task.title}' تگ کرد."
+            send_realtime_notification(
+                user=user,
+                type_='mention',
+                title='تگ شدن در وظیفه',
+                message=message,
+                task=task
+            )
 
         response_data = {
             "message": "Users tagged successfully.",
