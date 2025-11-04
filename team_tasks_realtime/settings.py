@@ -51,6 +51,9 @@ INSTALLED_APPS = [
     'notifications',
     'auth_api',
     'channels',
+
+    'django_celery_beat',
+    
 ]
 
 ASGI_APPLICATION = 'team_tasks_realtime.asgi.application'
@@ -59,10 +62,28 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)],
+            "hosts": [("redis_channels", 6379)],  # نام سرویس Redis در docker-compose
         },
     },
 }
+
+CELERY_BROKER_URL = 'amqp://guest:guest@rabbitmq:5672//'  # یا redis اگر استفاده می‌کنید
+CELERY_RESULT_BACKEND = 'rpc://'
+
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
+# تنظیمات Periodic Tasks برای Celery Beat
+from celery.schedules import crontab
+from datetime import timedelta
+CELERY_BEAT_SCHEDULE = {
+    'check-overdue-tasks-every-5-minutes': {
+        'task': 'notifications.tasks.check_overdue_tasks',
+        'schedule': timedelta(seconds=20),  # اجرا هر ۵ ثانیه
+    },
+}
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -148,8 +169,16 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
+import os
+from pathlib import Path
 
-STATIC_URL = 'static/'
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+STATIC_URL = '/static/'
+
+# این مسیر جایی است که collectstatic فایل‌ها را قرار می‌دهد
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
