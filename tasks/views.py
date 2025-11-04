@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
-from .serializers import TaskSerializer
+from .serializers import TaskSerializer, TaskAssignResponseSerializer
 from .models import Task
 from django.contrib.auth.models import User
 import re
@@ -9,53 +9,51 @@ from .permissions import IsTeamMember
 from drf_spectacular.utils import extend_schema, OpenApiExample
 
 
-@extend_schema(
-    request=TaskSerializer,
-    responses={201: TaskSerializer},
-    summary="ایجاد تسک جدید",
-    description=(
-        "کاربران عضو تیم می‌توانند تسک جدید بسازند.\n"
-        "در توضیحات (description) اگر از علامت @username استفاده شود، آن کاربران به عنوان tagged_users اضافه می‌شوند."
-    ),
-    tags=['Tasks'],
-    examples=[
-        OpenApiExample(
-            name="نمونه درخواست ایجاد تسک",
-            value={
-                "title": "بررسی باگ‌های نسخه جدید",
-                "description": "لطفاً تست کن @sara و @ali",
-                "due_date": "2025-11-04T06:00:00+03:30",
-                "priority": "high",
-                "assignee": 2,
-                "team": 1
-            },
-            request_only=True,
-        ),
-        OpenApiExample(
-            name="نمونه پاسخ ایجاد تسک",
-            value={
-                "id": 5,
-                "title": "بررسی باگ‌های نسخه جدید",
-                "description": "لطفاً تست کن @sara و @ali",
-                "due_date": "2025-11-04T06:00:00+03:30",
-                "priority": "high",
-                "creator_info": {"id": 1, "username": "arash"},
-                "assignee_info": {"id": 2, "username": "sara"},
-                "tagged_users_info": [
-                    {"id": 2, "username": "sara"},
-                    {"id": 3, "username": "ali"}
-                ],
-                "team": 1
-            },
-            response_only=True,
-        ),
-    ]
-)
-
-
 class TaskCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated, IsTeamMember]
 
+    @extend_schema(
+        request=TaskSerializer,
+        responses={201: TaskSerializer},
+        summary="ایجاد تسک جدید",
+        description=(
+            "کاربران عضو تیم می‌توانند تسک جدید بسازند.\n"
+            "در توضیحات (description) اگر از علامت @username استفاده شود، آن کاربران به عنوان tagged_users اضافه می‌شوند."
+        ),
+        tags=['Tasks'],
+        examples=[
+            OpenApiExample(
+                name="نمونه درخواست ایجاد تسک",
+                value={
+                    "title": "بررسی باگ‌های نسخه جدید",
+                    "description": "لطفاً تست کن @sara و @ali",
+                    "due_date": "2025-11-04T06:00:00+03:30",
+                    "priority": "high",
+                    "assignee": 2,
+                    "team": 1
+                },
+                request_only=True,
+            ),
+            OpenApiExample(
+                name="نمونه پاسخ ایجاد تسک",
+                value={
+                    "id": 5,
+                    "title": "بررسی باگ‌های نسخه جدید",
+                    "description": "لطفاً تست کن @sara و @ali",
+                    "due_date": "2025-11-04T06:00:00+03:30",
+                    "priority": "high",
+                    "creator_info": {"id": 1, "username": "arash"},
+                    "assignee_info": {"id": 2, "username": "sara"},
+                    "tagged_users_info": [
+                        {"id": 2, "username": "sara"},
+                        {"id": 3, "username": "ali"}
+                    ],
+                    "team": 1
+                },
+                response_only=True,
+            ),
+        ]
+    ) 
     def post(self, request):
         serializer = TaskSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -77,41 +75,39 @@ class TaskCreateView(APIView):
         return Response(TaskSerializer(task).data, status=status.HTTP_201_CREATED)
 
 
-@extend_schema(
-    responses={200: TaskSerializer(many=True)},
-    summary="دریافت لیست تسک‌های تیم‌های کاربر",
-    description="تمام تسک‌هایی که کاربر عضو تیم آن‌هاست، در این endpoint برگردانده می‌شود.",
-    tags=['Tasks'],
-    examples=[
-        OpenApiExample(
-            "نمونه پاسخ لیست تسک‌ها",
-            value=[
-                {
-                    "id": 1,
-                    "title": "رفع باگ لاگین",
-                    "description": "بررسی کن @mohammad",
-                    "due_date": "2025-11-05T09:00:00+03:30",
-                    "priority": "medium",
-                    "creator_info": {"id": 1, "username": "arash"},
-                    "assignee_info": {"id": 2, "username": "mohammad"},
-                    "tagged_users_info": [{"id": 2, "username": "mohammad"}],
-                    "team": 1
-                }
-            ],
-            response_only=True
-        )
-    ]
-)
-
-
 class TaskListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
+
+    @extend_schema(
+        responses={200: TaskSerializer(many=True)},
+        summary="دریافت لیست تسک‌های تیم‌های کاربر",
+        description="تمام تسک‌هایی که کاربر عضو تیم آن‌هاست، در این endpoint برگردانده می‌شود.",
+        tags=['Tasks'],
+        examples=[
+            OpenApiExample(
+                "نمونه پاسخ لیست تسک‌ها",
+                value=[
+                    {
+                        "id": 1,
+                        "title": "رفع باگ لاگین",
+                        "description": "بررسی کن @mohammad",
+                        "due_date": "2025-11-05T09:00:00+03:30",
+                        "priority": "medium",
+                        "creator_info": {"id": 1, "username": "arash"},
+                        "assignee_info": {"id": 2, "username": "mohammad"},
+                        "tagged_users_info": [{"id": 2, "username": "mohammad"}],
+                        "team": 1
+                    }
+                ],
+                response_only=True
+            )
+        ]
+    )  
     def get(self, request):
         tasks = Task.objects.filter(team__members=request.user)
         serializer = TaskSerializer(tasks, many=True)
         return Response(serializer.data)
-
 
 @extend_schema(
     responses={200: TaskSerializer},
@@ -141,6 +137,7 @@ class TaskListView(APIView):
 class TaskDetailView(APIView):
     permission_classes = [permissions.IsAuthenticated, IsTeamMember]
 
+
     def get_object(self, pk):
         try:
             return Task.objects.get(pk=pk)
@@ -159,6 +156,29 @@ class TaskDetailView(APIView):
 class TaskAssignView(APIView):
     permission_classes = [permissions.IsAuthenticated, IsTeamMember]
 
+
+    @extend_schema(
+        summary="تخصیص وظیفه به یکی از اعضای تیم",
+        description="فقط اعضای تیم می‌توانند وظیفه را به یکی از اعضای همان تیم واگذار کنند.",
+        tags=['Tasks'],
+        request=None,
+        responses={200: TaskAssignResponseSerializer},
+        examples=[
+            OpenApiExample(
+                "نمونه درخواست",
+                value={"assignee_id": 3},
+            ),
+            OpenApiExample(
+                "نمونه پاسخ موفق",
+                value={
+                    "message": "Task assigned successfully.",
+                    "assigned_to": {"id": 3, "username": "sara"},
+                    "task": "طراحی API لاگین"
+                },
+                response_only=True
+            )
+        ]
+    )
     def post(self, request, pk):
         try:
             task = Task.objects.get(pk=pk)

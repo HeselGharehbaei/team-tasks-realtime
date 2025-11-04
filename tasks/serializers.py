@@ -22,3 +22,9 @@ class TaskSerializer(serializers.ModelSerializer):
             'tagged_users', 'tagged_users_info',
             'team'
         ]
+
+
+class TaskAssignResponseSerializer(serializers.Serializer):
+    message = serializers.CharField()
+    assigned_to = serializers.DictField()
+    task = serializers.CharField()
