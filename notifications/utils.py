@@ -16,7 +16,7 @@ def send_realtime_notification(user, type_, title, message, task=None):
     # ارسال بلادرنگ
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
-        "all_users",
+        f"user_{user.id}",
         {
             "type": "send_notification",
             "content": {
