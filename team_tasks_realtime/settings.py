@@ -76,11 +76,11 @@ CELERY_RESULT_SERIALIZER = 'json'
 
 # تنظیمات Periodic Tasks برای Celery Beat
 from celery.schedules import crontab
-from datetime import timedelta
+
 CELERY_BEAT_SCHEDULE = {
     'check-overdue-tasks-every-5-minutes': {
         'task': 'notifications.tasks.check_overdue_tasks',
-        'schedule': timedelta(seconds=20),  # اجرا هر ۵ ثانیه
+        'schedule': crontab(minute='*/5'),  # اجرا هر ۵ دقیقه
     },
 }
 
