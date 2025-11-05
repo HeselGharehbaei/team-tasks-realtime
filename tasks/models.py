@@ -17,7 +17,7 @@ class Task(models.Model):
     due_date= models.DateTimeField()
     priority= models.CharField(max_length=10, choices=PRIORITY_CHOICES)
     assignee=models.ForeignKey(User, null= True, blank= True, related_name='assigned_tasks', on_delete=models.SET_NULL)
-    tagged_users= models.ManyToManyField(User, related_name='tagged_in_tasks')
+    tagged_users= models.ManyToManyField(User, related_name='tagged_in_tasks', blank= True,)
     team= models.ForeignKey(Team, related_name='tasks', on_delete=models.CASCADE)
 
 
