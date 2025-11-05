@@ -8,7 +8,7 @@ class UserSimpleSerializer(serializers.ModelSerializer):
         fields = ['id', 'username']
 
 class TaskSerializer(serializers.ModelSerializer):
-    tagged_users = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), many=True, write_only=True)
+    tagged_users = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), many=True, write_only=True, required=False)
     tagged_users_info = UserSimpleSerializer(source='tagged_users', many=True, read_only=True)
     creator_info = UserSimpleSerializer(source='creator', read_only=True)
     assignee_info = UserSimpleSerializer(source='assignee', read_only=True)
