@@ -1,22 +1,33 @@
 from rest_framework import permissions
 from .models import Team
+from .models import Task
 
 class IsTeamMember(permissions.BasePermission):
     """
-    Only team members can access the Task.
+    فقط اعضای تیم می‌تونن به تسک‌های تیم خودشون دسترسی داشته باشن.
     """
 
     def has_permission(self, request, view):
-        if request.method == "POST":
-            team_id = request.data.get('team')
-            if not team_id:
-                return False
-            try:
-                team = Team.objects.get(id=team_id)
-                return request.user in team.members.all()
-            except Team.DoesNotExist:
-                return False
-        return True  # For GET requests, object-level permission will handle access
+        team = None
+
+        # ۱. اگر team در body وجود داشت
+        team_id = request.data.get('team')
+        if team_id:
+            team = Team.objects.filter(id=team_id).first()
+
+        # ۲. در غیر این صورت اگه pk در URL هست، تیم رو از تسک پیدا کن
+        elif view.kwargs.get('pk'):
+            task = Task.objects.filter(pk=view.kwargs['pk']).select_related('team').first()
+            if task:
+                team = task.team
+
+        # ۳. در صورتی که team پیدا شد، بررسی کن که کاربر عضوش هست یا نه
+        if team:
+            return team.members.filter(id=request.user.id).exists()
+
+        # اگر هیچ تیمی پیدا نشد، اجازه نده
+        return False
 
     def has_object_permission(self, request, view, obj):
-        return request.user in obj.team.members.all()
+        # بررسی دسترسی در سطح شیء
+        return obj.team.members.filter(id=request.user.id).exists()
