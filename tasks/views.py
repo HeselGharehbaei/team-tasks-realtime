@@ -59,7 +59,15 @@ class TaskCreateView(APIView):
         serializer = TaskSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         task = serializer.save(creator=request.user)
-
+        if task.assignee:
+            message = f"وظیفه '{task.title}' به شما واگذار شد."
+            send_realtime_notification(
+                user=task.assignee,
+                type_='assignment',
+                title='تخصیص وظیفه جدید',
+                message=message,
+                task=task
+            )
         # استخراج @mention ها
         mentions = re.findall(r'@(\w+)', task.description)
         tagged_users = []
